@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
+
 import time
+import os
+import traceback
 
 from src import InstaBot
 from src.check_status import check_status
@@ -9,48 +11,55 @@ from src.feed_scanner import feed_scanner
 from src.follow_protocol import follow_protocol
 from src.unfollow_protocol import unfollow_protocol
 
-bot = InstaBot(
-    login="username",
-    password="password",
-    like_per_day=1000,
-    comments_per_day=0,
-    tag_list=['follow4follow', 'f4f', 'cute'],
-    tag_blacklist=['rain', 'thunderstorm'],
-    user_blacklist={},
-    max_like_for_one_tag=50,
-    follow_per_day=300,
-    follow_time=1 * 60,
-    unfollow_per_day=300,
-    unfollow_break_min=15,
-    unfollow_break_max=30,
-    log_mod=0,
-    proxy='',
-    # List of list of words, each of which will be used to generate comment
-    # For example: "This shot feels wow!"
-    comment_list=[["this", "the", "your"],
-                  ["photo", "picture", "pic", "shot", "snapshot"],
-                  ["is", "looks", "feels", "is really"],
-                  ["great", "super", "good", "very good", "good", "wow",
-                   "WOW", "cool", "GREAT","magnificent", "magical",
-                   "very cool", "stylish", "beautiful", "so beautiful",
-                   "so stylish", "so professional", "lovely",
-                   "so lovely", "very lovely", "glorious","so glorious",
-                   "very glorious", "adorable", "excellent", "amazing"],
-                  [".", "..", "...", "!", "!!", "!!!"]],
-    # Use unwanted_username_list to block usernames containing a string
-    ## Will do partial matches; i.e. 'mozart' will block 'legend_mozart'
-    ### 'free_followers' will be blocked because it contains 'free'
-    unwanted_username_list=[
-        'second', 'stuff', 'art', 'project', 'love', 'life', 'food', 'blog',
-        'free', 'keren', 'photo', 'graphy', 'indo', 'travel', 'art', 'shop',
-        'store', 'sex', 'toko', 'jual', 'online', 'murah', 'jam', 'kaos',
-        'case', 'baju', 'fashion', 'corp', 'tas', 'butik', 'grosir', 'karpet',
-        'sosis', 'salon', 'skin', 'care', 'cloth', 'tech', 'rental', 'kamera',
-        'beauty', 'express', 'kredit', 'collection', 'impor', 'preloved',
-        'follow', 'follower', 'gain', '.id', '_id', 'bags'
-    ],
-    unfollow_whitelist=['example_user_1', 'example_user_2'])
-while True:
+
+def process_tags(tag_string):
+    tag_list = list(set([tag.strip('#')
+                    for tag in tag_string.split()]))
+    return tag_list
+
+def run_bot():
+    bot = InstaBot(
+        login=os.environ.get('INSTAGRAM_USERNAME', 'username'),
+        password=os.environ.get('INSTAGRAM_PASSWORD', 'password'),
+        like_per_day=1000,
+        comments_per_day=0,
+        tag_list=process_tags(os.environ.get('TAGS_TO_FOLLOW', '#follow4follow #f4f #cute')),
+        tag_blacklist=['rain', 'thunderstorm'],
+        user_blacklist={},
+        max_like_for_one_tag=50,
+        follow_per_day=300,
+        follow_time=1 * 60,
+        unfollow_per_day=300,
+        unfollow_break_min=15,
+        unfollow_break_max=30,
+        log_mod=0,
+        proxy=os.environ.get('PROXY', ''),
+        # List of list of words, each of which will be used to generate comment
+        # For example: "This shot feels wow!"
+        comment_list=[["this", "the", "your"],
+                      ["photo", "picture", "pic", "shot", "snapshot"],
+                      ["is", "looks", "feels", "is really"],
+                      ["great", "super", "good", "very good", "good", "wow",
+                       "WOW", "cool", "GREAT", "magnificent", "magical",
+                       "very cool", "stylish", "beautiful", "so beautiful",
+                       "so stylish", "so professional", "lovely",
+                       "so lovely", "very lovely", "glorious", "so glorious",
+                       "very glorious", "adorable", "excellent", "amazing"],
+                      [".", "..", "...", "!", "!!", "!!!"]],
+        # Use unwanted_username_list to block usernames containing a string
+        ## Will do partial matches; i.e. 'mozart' will block 'legend_mozart'
+        ### 'free_followers' will be blocked because it contains 'free'
+        unwanted_username_list=[
+            'second', 'stuff', 'art', 'project', 'love', 'life', 'food', 'blog',
+            'free', 'keren', 'photo', 'graphy', 'indo', 'travel', 'art', 'shop',
+            'store', 'sex', 'toko', 'jual', 'online', 'murah', 'jam', 'kaos',
+            'case', 'baju', 'fashion', 'corp', 'tas', 'butik', 'grosir', 'karpet',
+            'sosis', 'salon', 'skin', 'care', 'cloth', 'tech', 'rental', 'kamera',
+            'beauty', 'express', 'kredit', 'collection', 'impor', 'preloved',
+            'follow', 'follower', 'gain', '.id', '_id', 'bags'
+        ],
+        unfollow_whitelist=['example_user_1', 'example_user_2']
+    )
 
     #print("# MODE 0 = ORIGINAL MODE BY LEVPASHA")
     #print("## MODE 1 = MODIFIED MODE BY KEMONG")
@@ -109,3 +118,12 @@ while True:
 
     else:
         print("Wrong mode!")
+
+
+if __name__ == '__main__':
+    while True:
+       try:
+           run_bot()
+       except RuntimeError as exc:
+           traceback.print_exc()
+           print exc
